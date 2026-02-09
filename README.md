@@ -7,6 +7,7 @@ postulantes a la etapa final de la entrevista, agregando incluso preguntas técn
 corroborar los conocimientos así descritos por el entrevistado.
 
 **IMPORTANTE:**
+
 Este flujo necesita una integración previa de un Google Forms y Google Sheets al mismo.
 Los campos usados para el forms en este proyecto son los siguientes:
 - Puesto al que postula (al menos uno)
@@ -21,6 +22,7 @@ Los campos usados para el forms en este proyecto son los siguientes:
 
 Posteriormente las respuestas se alojaban en un Google Sheets el cual utilizaba el siguiente App Script para enviar las respuestas
 automaticamente al Webhook del workflow:
+
 'function alRecibirPostulacion(e) {
 
   var urlDen8n = 'PEGAR_LA_URL_DE_SU_WEBHOOK';
@@ -42,6 +44,7 @@ automaticamente al Webhook del workflow:
   };
   
   // Configuración del envío
+  
   var opciones = {
     'method': 'post',
     'contentType': 'application/json',
@@ -49,10 +52,12 @@ automaticamente al Webhook del workflow:
   };
   
   // Ejecución directa (sin manejo de errores)
+  
   UrlFetchApp.fetch(urlDen8n, opciones);
 }'
 
 ***AQUI EMPIEZA EL WORKFLOW n8n***
+
 *(Se deben cargar Credenciales para las APIs de Gemini y Google Sheets y Gmail).*
 
 1. El nodo Webhook recibe las respuestas almacenadas en el Google Sheets.
@@ -63,21 +68,26 @@ automaticamente al Webhook del workflow:
 6. Si el primer Agente decide que el postulado es APTO continua el flujo hacia el segundo agente el cual redactará 3 preguntas para realizar en la futura entrevista teniendo en cuenta los conocimientos detallados por el postulado.
 7. El siguiente nodo Code (javascript) organiza la respuesta del Segundo agente para organizarlos en un JSON:
 
-   '// Obtenemos el texto crudo que viene de Gemini
+'// Obtenemos el texto crudo que viene de Gemini
+
 const rawText = $input.first().json.content.parts[0].text;
 
 // Limpiamos posibles bloques de código markdown (```json ... ```) si la IA los incluyó
+
 const cleanedText = rawText.replace(/```json|```/g, "").trim();
 try {
 
   // Convertimos el texto en un objeto JSON real
+  
   const parsedJson = JSON.parse(cleanedText);
   
   // Devolvemos el objeto para que los siguientes nodos puedan usarlo
+  
   return parsedJson;
 } catch (error) {
 
   // Si falla el parseo, devolvemos un error descriptivo
+  
   return { 
     error: "No se pudo parsear el JSON", 
     raw: rawText 
