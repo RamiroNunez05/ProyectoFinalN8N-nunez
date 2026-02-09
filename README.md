@@ -22,9 +22,12 @@ Los campos usados para el forms en este proyecto son los siguientes:
 Posteriormente las respuestas se alojaban en un Google Sheets el cual utilizaba el siguiente App Script para enviar las respuestas
 automaticamente al Webhook del workflow:
 'function alRecibirPostulacion(e) {
+
   var urlDen8n = 'PEGAR_LA_URL_DE_SU_WEBHOOK';
+  
   // Obtener las respuestas del formulario
   var respuestas = e.namedValues;
+  
   // Mapeo de campos
   var datos = {
     "puesto": respuestas["Puesto al que postula"] ? respuestas["Puesto al que postula"][0] : "",
@@ -37,12 +40,14 @@ automaticamente al Webhook del workflow:
     "nivel_ingles": respuestas["¿Cómo calificaría su dominio del Inglés como idioma?"] ? respuestas["¿Cómo calificaría su dominio del Inglés como idioma?"][0] : "",
     "habilidades": respuestas["Describa sus Habilidades Técnicas y Blandas"] ? respuestas["Describa sus Habilidades Técnicas y Blandas"][0] : ""
   };
+  
   // Configuración del envío
   var opciones = {
     'method': 'post',
     'contentType': 'application/json',
     'payload': JSON.stringify(datos)
   };
+  
   // Ejecución directa (sin manejo de errores)
   UrlFetchApp.fetch(urlDen8n, opciones);
 }'
@@ -60,14 +65,18 @@ automaticamente al Webhook del workflow:
 
    '// Obtenemos el texto crudo que viene de Gemini
 const rawText = $input.first().json.content.parts[0].text;
+
 // Limpiamos posibles bloques de código markdown (```json ... ```) si la IA los incluyó
 const cleanedText = rawText.replace(/```json|```/g, "").trim();
 try {
+
   // Convertimos el texto en un objeto JSON real
   const parsedJson = JSON.parse(cleanedText);
+  
   // Devolvemos el objeto para que los siguientes nodos puedan usarlo
   return parsedJson;
 } catch (error) {
+
   // Si falla el parseo, devolvemos un error descriptivo
   return { 
     error: "No se pudo parsear el JSON", 
@@ -75,4 +84,4 @@ try {
   };
 }'
 
-8. El nodo final Sheets agrega la información del postulado y las preguntas hechas por el agente a una tabla de POSTULANTES APTOS.
+9. El nodo final Sheets agrega la información del postulado y las preguntas hechas por el agente a una tabla de POSTULANTES APTOS.
