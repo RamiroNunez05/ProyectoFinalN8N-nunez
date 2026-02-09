@@ -1,0 +1,766 @@
+{
+  "name": "Proyecto Final Coderhouse",
+  "nodes": [
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=# ROLE\nTechnical Interview Architect.\n\n# TASK\nGenerar 3 preguntas técnicas de nivel experto basadas en el rol y el stack del candidato.\n\n# INPUT\n- Rol: {{ $('Edit Fields1').item.json.puesto }}\n- Stack: {{ $('Edit Fields1').item.json.habilidades }}\n\n# JSON SCHEMA DEFINITION\nDebes generar un JSON que siga estrictamente este esquema. Los valores deben ser tipos de datos nativos (strings, integers, arrays), NO un bloque de texto único.\n\n{\n  \"entrevista_config\": {\n    \"rol_evaluado\": \"string\",\n    \"preguntas\": [\n      {\n        \"id\": \"integer\",\n        \"tecnologia\": \"string\",\n        \"pregunta_desafio\": \"string\",\n        \"criterio_evaluacion\": \"string\"\n      }\n    ]\n  }\n}\n\n# CONSTRAINTS (CRITICAL)\n1. Responde ÚNICAMENTE con el objeto JSON.\n2. NO incluyas markdown (prohibido usar ```json).\n3. NO incluyas saltos de línea fuera de la estructura del JSON.\n4. Asegúrate de que \"pregunta_desafio\" sea una situación práctica, no teórica.\n5. El output debe comenzar con { y terminar con }.\n\n# EXAMPLE OF DESIRED FORMAT\n{\n  \"entrevista_config\": {\n    \"rol_evaluado\": \"Backend Dev\",\n    \"preguntas\": [\n      {\n        \"id\": 1,\n        \"tecnologia\": \"Node.js\",\n        \"pregunta_desafio\": \"¿Cómo manejarías una fuga de memoria en un stream de datos de 2GB?\",\n        \"criterio_evaluacion\": \"Capacidad de gestión de buffers y garbage collection.\"\n      }\n    ]\n  }\n}"
+            }
+          ]
+        },
+        "jsonOutput": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        -448,
+        -608
+      ],
+      "id": "152c9e1a-fa8e-4e62-a958-d12fe336e55b",
+      "name": "Message a model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "kZcrBT76e1UX0Nve",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=# ROLE\nActúa como un Reclutador Técnico Senior especializado en filtrado algorítmico de talento para empresas de tecnología de alto nivel.\n\n# CONTEXT\nFormas parte de un workflow automatizado de adquisición de talento. Tu tarea es analizar la coherencia entre el rol solicitado y el perfil del candidato para decidir si debe avanzar a la entrevista humana.\n\n# INPUT DATA\n- **Rol Postulado: {{ $json.puesto }}\n- **Habilidades Técnicas y Blandas: {{ $json.habilidades }}\n- **Años de Experiencia: {{ $json.anios_exp }}\n\n# EVALUATION CRITERIA\nPara determinar si un candidato es \"APTO\" (true), debes validar:\n1. **Hard Skills Match:** El candidato posee al menos el 70% de las herramientas técnicas críticas para el rol.\n2. **Soft Skills Alignment:** Las habilidades blandas mencionadas son compatibles con las exigencias del puesto (ej. Liderazgo para roles Senior, Comunicación para roles de cara al cliente).\n3. **Consistencia:** No hay contradicciones evidentes entre el rol y las habilidades (ej. un Desarrollador Backend sin conocimiento de bases de datos o lógica de servidores).\n\n# CONSTRAINTS\n- Tu respuesta debe ser EXCLUSIVAMENTE un objeto JSON válido.\n- No incluyas explicaciones, introducciones ni texto adicional fuera del JSON.\n- Si el candidato cumple con los criterios mínimos,devuelve \"APTO\". De lo contrario, \"NO APTO\".\n\n#OUTPUT FORMAT:\n\"APTO\"\n\"NO APTO\""
+            }
+          ]
+        },
+        "jsonOutput": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        -1456,
+        -448
+      ],
+      "id": "3304aa78-3007-47e0-a089-39cc6c5624ba",
+      "name": "Message a model1",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "alwaysOutputData": false,
+      "notesInFlow": false,
+      "credentials": {
+        "googlePalmApi": {
+          "id": "kZcrBT76e1UX0Nve",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "548c04a8-aed1-4837-8456-a981848352d8",
+              "leftValue": "={{ $json.content.parts[0].text }}",
+              "rightValue": "\"APTO\"",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -848,
+        -464
+      ],
+      "id": "4eb8d3f1-7da8-4bde-a844-f888c75c45d2",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Edit Fields1').item.json.correo }}",
+        "subject": "=Asunto: Actualización sobre tu proceso para la posición de  {{ $('Edit Fields1').item.json.puesto }}",
+        "emailType": "text",
+        "message": "=Hola, {{ $('Edit Fields1').item.json.nombre }}:  \nMuchas gracias por el tiempo que nos dedicaste y por tu interés en formar parte de nuestro equipo.  \nTras revisar cuidadosamente tu perfil y valorar tus habilidades técnicas en relación con los requisitos actuales de la posición, hemos decidido no avanzar con tu candidatura a la etapa de entrevistas en esta ocasión.  \nValoramos mucho tu experiencia y el potencial que demuestras. Mantendremos tu perfil en nuestra base de datos para futuras vacantes que se ajusten mejor a tu especialización.  \nTe deseamos mucho éxito en tus próximos desafíos profesionales.  \nAtentamente,  \nEl Equipo de Selección",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        -384,
+        -256
+      ],
+      "id": "ac995354-8155-4e4c-8c52-6d257fa349d7",
+      "name": "Send a message",
+      "webhookId": "3603e8e3-4c85-43aa-af1f-6465dcd72899",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "NsN5jdBlnRq8yxk2",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1V721ilT4A3zTZxBESW4OjIn5-3BwamjVyj0Wbav4lCk/edit?usp=sharing",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Hoja 1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1V721ilT4A3zTZxBESW4OjIn5-3BwamjVyj0Wbav4lCk/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "puesto": "={{ $json.entrevista_config.rol_evaluado }}",
+            "nombre": "={{ $('Edit Fields1').item.json.nombre }}",
+            "correo": "={{ $('Edit Fields1').item.json.correo }}",
+            "años_exp": "={{ $('Edit Fields1').item.json.anios_exp }}",
+            "pregunta1": "={{ $json.entrevista_config.preguntas[0].pregunta_desafio }}",
+            "razon1": "={{ $json.entrevista_config.preguntas[0].criterio_evaluacion }}",
+            "pregunta2": "={{ $json.entrevista_config.preguntas[1].pregunta_desafio }}",
+            "razon2": "={{ $json.entrevista_config.preguntas[1].criterio_evaluacion }}",
+            "pregunta3": "={{ $json.entrevista_config.preguntas[2].pregunta_desafio }}",
+            "razon3": "={{ $json.entrevista_config.preguntas[2].criterio_evaluacion }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "nombre",
+              "displayName": "nombre",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "correo",
+              "displayName": "correo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "puesto",
+              "displayName": "puesto",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "años_exp",
+              "displayName": "años_exp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "pregunta1",
+              "displayName": "pregunta1",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "razon1",
+              "displayName": "razon1",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "pregunta2",
+              "displayName": "pregunta2",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "razon2",
+              "displayName": "razon2",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "pregunta3",
+              "displayName": "pregunta3",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "razon3",
+              "displayName": "razon3",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        608,
+        -960
+      ],
+      "id": "b45051e8-6bc8-46d2-aaa8-5bee58b49854",
+      "name": "Append row in sheet1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "4reECeuzs3DCkdtV",
+          "name": "Google Sheets account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "content": "## Se recibe el scriptde postulacion\n\n",
+        "height": 304,
+        "width": 246
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -2112,
+        -576
+      ],
+      "typeVersion": 1,
+      "id": "cc68b578-d727-47bc-8715-28aeeff2e757",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## Se organizan los datos para pasarlos limpios al agente",
+        "height": 304,
+        "width": 246,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1824,
+        -576
+      ],
+      "typeVersion": 1,
+      "id": "a59f39e5-eab9-4504-a353-2ef330599e45",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## El Agente compara para ver si es apto para la entrevista",
+        "height": 304,
+        "width": 358,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1536,
+        -576
+      ],
+      "typeVersion": 1,
+      "id": "d13fc504-dd03-4acd-b8c7-806cc9df2637",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "## Se compara APTO con el json que envie el Agente",
+        "height": 304,
+        "width": 262,
+        "color": 2
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -928,
+        -592
+      ],
+      "typeVersion": 1,
+      "id": "8bec94f3-1853-4ccf-9cdd-525d04948f73",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "\n\n\n\n\n\n\n\n\n\n\n\n\n## Se envia un mail notificando que no pudo ser seleccionado en esta ocasion",
+        "height": 336,
+        "width": 294
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -480,
+        -288
+      ],
+      "typeVersion": 1,
+      "id": "48568898-2bb8-4a6f-996c-2e8314c968b6",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "content": "## Se generan preguntas para la futura entrevista",
+        "height": 320,
+        "width": 294,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -480,
+        -736
+      ],
+      "typeVersion": 1,
+      "id": "646085a2-d984-48b5-99dd-95a9984ebadd",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {
+        "content": "## Se actualiza la lista de entrevistados con las preguntas a hacer",
+        "height": 304,
+        "width": 310,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        496,
+        -1088
+      ],
+      "typeVersion": 1,
+      "id": "a20da40e-6f53-4e38-9cbd-a78bccf4e503",
+      "name": "Sticky Note6"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "60c095f7-7605-4b9d-a751-19cb5814d71e",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -2032,
+        -448
+      ],
+      "id": "567c03b5-fa8f-4818-87d5-7e0c75a246dc",
+      "name": "Webhook",
+      "webhookId": "60c095f7-7605-4b9d-a751-19cb5814d71e",
+      "retryOnFail": true,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"puesto\": \"{{ $json.body['Puesto al que postula'] }}\",\n  \"nombre\": \"{{ $json.body['Nombre Completo'] }}\",\n  \"correo\": \"{{ $json.body['Correo Electrónico'] }}\",\n  \"anios_exp\": \"{{ $json.body['Años de experiencia laboral relevante'] }}\",\n  \"eng_level\": \"{{ $json.body['¿Cómo calificaría su dominio del Inglés como idioma?'] }}\",\n  \"habilidades\": \"{{ $json.body['Describa sus Habilidades Técnicas y Blandas'] }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1744,
+        -448
+      ],
+      "id": "8c9d2f19-7bb8-4632-961b-b435f2fb7510",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Obtenemos el texto crudo que viene de Gemini\nconst rawText = $input.first().json.content.parts[0].text;\n\n// Limpiamos posibles bloques de código markdown (```json ... ```) si la IA los incluyó\nconst cleanedText = rawText.replace(/```json|```/g, \"\").trim();\n\ntry {\n  // Convertimos el texto en un objeto JSON real\n  const parsedJson = JSON.parse(cleanedText);\n  \n  // Devolvemos el objeto para que los siguientes nodos puedan usarlo\n  return parsedJson;\n} catch (error) {\n  // Si falla el parseo, devolvemos un error descriptivo\n  return { \n    error: \"No se pudo parsear el JSON\", \n    raw: rawText \n  };\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        304,
+        -960
+      ],
+      "id": "24cdca14-1290-495b-b01c-634511705cbc",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "content": "## Transforma la respuesta tipo texto a formato json",
+        "height": 304
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        224,
+        -1088
+      ],
+      "typeVersion": 1,
+      "id": "0fd05ddd-bf7a-404d-8d6e-c2e9c3d7b17d",
+      "name": "Sticky Note7"
+    },
+    {
+      "parameters": {
+        "errorMessage": "La API de Gemini no pudo establecer conexión"
+      },
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        -1040,
+        80
+      ],
+      "id": "a1354c63-321a-4aca-a0a3-1191166b5a6b",
+      "name": "Stop and Error",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "content": "\n\n\n\n\n\n\n\n\n\n\n\n\n## La API de Gemini no pudo establecer conexión y se envia una alerta al soporte técnico",
+        "height": 272,
+        "width": 566,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1136,
+        64
+      ],
+      "typeVersion": 1,
+      "id": "533efd81-e4a7-42e9-a9d6-31eb3b649e5d",
+      "name": "Sticky Note8"
+    },
+    {
+      "parameters": {
+        "sendTo": "ramirosebastiann@gmail.com",
+        "subject": "ERROR en el Flujo de Trabajo",
+        "emailType": "text",
+        "message": "La API de Gemini no pudo conectarse y el postulante no recibió ninguna respuesta.",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        -768,
+        80
+      ],
+      "id": "e8059efe-65eb-41be-b860-ce32ccb3b774",
+      "name": "Send a message1",
+      "webhookId": "0e58412b-c8e9-44af-aef2-ea2f9ab8be88",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "NsN5jdBlnRq8yxk2",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "errorMessage": "La API de Gemini no pudo establecer conexión"
+      },
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        256,
+        -592
+      ],
+      "id": "6aa171df-b2eb-491a-ac6a-156425a9ad87",
+      "name": "Stop and Error1",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "sendTo": "ramirosebastiann@gmail.com",
+        "subject": "ERROR en el Flujo de Trabajo",
+        "emailType": "text",
+        "message": "La API de Gemini no pudo conectarse y el postulante APTO no pudo ser anotado en la tabla de entrevistados.",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        544,
+        -592
+      ],
+      "id": "947f647d-13f0-404a-a0c5-166088e7f3b0",
+      "name": "Send a message2",
+      "webhookId": "0e58412b-c8e9-44af-aef2-ea2f9ab8be88",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "NsN5jdBlnRq8yxk2",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "\n\n\n\n\n\n\n\n\n\n\n\n\n## La API de Gemini no pudo establecer conexión y se envia una alerta al soporte técnico",
+        "height": 272,
+        "width": 566,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        176,
+        -608
+      ],
+      "typeVersion": 1,
+      "id": "b6f96d9d-6940-42dc-ae46-d2761ac1db91",
+      "name": "Sticky Note9"
+    },
+    {
+      "parameters": {
+        "errorMessage": "La API de Google Sheets no pudo establecer conexión"
+      },
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        992,
+        -944
+      ],
+      "id": "80a391ca-0edf-4825-af9c-c7f4d6b7b7b0",
+      "name": "Stop and Error2",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "sendTo": "ramirosebastiann@gmail.com",
+        "subject": "ERROR en el Flujo de Trabajo",
+        "emailType": "text",
+        "message": "La API de Google Sheets no pudo conectarse y el postulante APTO no pudo ser anotado en la tabla de entrevistados.",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1280,
+        -944
+      ],
+      "id": "aa70bd6b-7d4c-4637-84eb-2ddbc47ad8cb",
+      "name": "Send a message3",
+      "webhookId": "0e58412b-c8e9-44af-aef2-ea2f9ab8be88",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "NsN5jdBlnRq8yxk2",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## La API de Sheets no pudo establecer conexión y se envia una alerta al soporte técnico",
+        "height": 304,
+        "width": 566,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        896,
+        -1072
+      ],
+      "typeVersion": 1,
+      "id": "9f322b50-5906-455f-9ccf-c33f02fd3afb",
+      "name": "Sticky Note10"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Message a model1": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Stop and Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Stop and Error1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Message a model1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet1": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Stop and Error2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        []
+      ]
+    },
+    "Stop and Error": {
+      "main": [
+        [
+          {
+            "node": "Send a message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Stop and Error1": {
+      "main": [
+        [
+          {
+            "node": "Send a message2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Stop and Error2": {
+      "main": [
+        [
+          {
+            "node": "Send a message3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "24be817f-f3b1-4e1c-89c1-f020e3433cb6",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "123981d150810e1d86e0d5df739e816b92770b3d01491ec595be132e4e12b102"
+  },
+  "id": "21jOwfqgDuMkodk1",
+  "tags": []
+}
