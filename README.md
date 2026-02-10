@@ -7,8 +7,8 @@ postulantes a la etapa final de la entrevista, agregando incluso preguntas técn
 corroborar los conocimientos así descritos por el entrevistado.
 
 **IMPORTANTE:**
-
 Este flujo necesita una integración previa de un Google Forms y Google Sheets al mismo.
+
 Los campos usados para el forms en este proyecto son los siguientes:
 - Puesto al que postula (al menos uno)
 - Nombre Completo
@@ -56,42 +56,46 @@ automaticamente al Webhook del workflow:
   UrlFetchApp.fetch(urlDen8n, opciones);
 }'
 
-***AQUI EMPIEZA EL WORKFLOW n8n***
+**------------------------------------------------------------------------------------------------------------------**
+***En caso de probar solo el workflow podria enviar los siguientes casos de prueba al webhook de n8n:***
 
-*(Se deben cargar Credenciales para las APIs de Gemini y Google Sheets y Gmail).*
+Caso 1 (perfil apto):
+{
+  "Puesto al que postula": "Analista de Datos Junior",
+  "Nombre Completo": "Mariana Costa",
+  "Correo Electrónico": "un_correo@ejemplo.com",
+  "Número de Teléfono": "+54 1111 222333",
+  "¿Cuál es su nivel educativo más alto alcanzado?": "Licenciatura/Grado",
+  "Años de experiencia laboral relevante": 2,
+  "Indique su disponibilidad para comenzar a trabajar": "inmediata",
+  "¿Cómo calificaría su dominio del Inglés como idioma?": "intermedio",
+  "Describa sus Habilidades Técnicas y Blandas": "Técnicas: Dominio de SQL, Python (Pandas/Matplotlib), Tableau y limpieza de datos en Excel. Blandas: Pensamiento crítico, gran capacidad de organización y facilidad para explicar hallazgos técnicos a audiencias no técnicas."
+}
 
-1. El nodo Webhook recibe las respuestas almacenadas en el Google Sheets.
-2. Edit Fields organiza y pasa a limpio los datos para enviarlos al primer Agente.
-3. El primer Agente recibe los datos y compara el puesto elegido con las aptitudes y habilidades señaladas para determinar si el postulado es APTO o NO APTO.
-4. El nodo IF compara la respuesta del Agente con "APTO", en caso de resultar true envia la informacion para continuar con el flujo, caso contrario se redirije a la rama false.
-5. En caso de resultar false se envia un mail al postulado agradeciendo su propuesta pero lamentando no poder ser seleccionado.
-6. Si el primer Agente decide que el postulado es APTO continua el flujo hacia el segundo agente el cual redactará 3 preguntas para realizar en la futura entrevista teniendo en cuenta los conocimientos detallados por el postulado.
-7. El siguiente nodo Code (javascript) organiza la respuesta del Segundo agente para organizarlos en un JSON:
+------------------------------------------------------------------------------------------------------------------
+Caso 2 (perfil no apto):
+{
+  "Puesto al que postula": "Diseñador UX/UI",
+  "Nombre Completo": "Carlos Martínez",
+  "Correo Electrónico": "un_correo@ejemplo.com",
+  "Número de Teléfono": "+54 1111 222333",
+  "¿Cuál es su nivel educativo más alto alcanzado?": "Educación Secundaria/Bachillerato",
+  "Años de experiencia laboral relevante": 0,
+  "Indique su disponibilidad para comenzar a trabajar": "más de 4 semanas",
+  "¿Cómo calificaría su dominio del Inglés como idioma?": "basico",
+  "Describa sus Habilidades Técnicas y Blandas": "Técnicas: Manejo básico de Paint y navegación en internet. Blandas: Simpático y con ganas de aprender cosas nuevas desde cero."
+}
 
-'// Obtenemos el texto crudo que viene de Gemini
-
-const rawText = $input.first().json.content.parts[0].text;
-
-// Limpiamos posibles bloques de código markdown (```json ... ```) si la IA los incluyó
-
-const cleanedText = rawText.replace(/```json|```/g, "").trim();
-try {
-
-  // Convertimos el texto en un objeto JSON real
-  
-  const parsedJson = JSON.parse(cleanedText);
-  
-  // Devolvemos el objeto para que los siguientes nodos puedan usarlo
-  
-  return parsedJson;
-} catch (error) {
-
-  // Si falla el parseo, devolvemos un error descriptivo
-  
-  return { 
-    error: "No se pudo parsear el JSON", 
-    raw: rawText 
-  };
-}'
-
-9. El nodo final Sheets agrega la información del postulado y las preguntas hechas por el agente a una tabla de POSTULANTES APTOS.
+------------------------------------------------------------------------------------------------------------------
+Caso 3 (perfil apto):
+{
+  "Puesto al que postula": "Desarrollador de Software Senior",
+  "Nombre Completo": "Ramiro Nuñez",
+  "Correo Electrónico": "un_correo@ejemplo.com",
+  "Número de Teléfono": "+54 1111 222333",
+  "¿Cuál es su nivel educativo más alto alcanzado?": "Licenciatura/Grado",
+  "Años de experiencia laboral relevante": 8,
+  "Indique su disponibilidad para comenzar a trabajar": "inmediata",
+  "¿Cómo calificaría su dominio del Inglés como idioma?": "avanzado",
+  "Describa sus Habilidades Técnicas y Blandas": "Técnicas: Arquitectura de microservicios, AWS, React, Node.js y Python. Blandas: Liderazgo de equipos técnicos, mentoría y comunicación asertiva en entornos remotos."
+}
